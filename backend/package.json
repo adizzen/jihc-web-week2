@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/adizzen/jihc-web-week1#readme",
   "dependencies": {
-    "co-body": "^6.2.0"
+    "co-body": "^6.2.0",
+    "pg": "^8.23.0"
   }
 }

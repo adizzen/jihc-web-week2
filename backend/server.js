@@ -1,21 +1,36 @@
 import http from 'http';
-import fs from 'fs';
 import CoBody from 'co-body';
+import pg from 'pg';
 
-function getUsers() {
-    const data = fs.readFileSync('./data.json');
-    return JSON.parse(data);
-}
+const { Pool } = pg;
+
+const pool = new Pool({
+    database: 'travel_db',
+    user: 'adin',
+    host: 'localhost',
+    port: 5432
+});
+
+pool.query('SELECT NOW()', (err, result) => {
+    if (err) {
+        console.log(err);
+    } else {
+        console.log('Database connected!');
+    }
+});
 
 async function registerUser(req) {
     const body = await CoBody.json(req);
-    const users = getUsers();
 
-    users.push(body);
-
-    fs.writeFileSync(
-        './data.json',
-        JSON.stringify(users, null, 2)
+    await pool.query(
+        `INSERT INTO users (name, email, destination, password)
+         VALUES ($1, $2, $3, $4)`,
+        [
+            body.name,
+            body.email,
+            body.destination,
+            body.password
+        ]
     );
 
     return {
@@ -25,14 +40,14 @@ async function registerUser(req) {
 
 async function loginUser(req) {
     const body = await CoBody.json(req);
-    const users = getUsers();
 
-    const user = users.find(item => {
-        return item.email === body.username &&
-            item.password === body.password;
-    });
+    const result = await pool.query(
+        `SELECT * FROM users
+         WHERE email = $1 AND password = $2`,
+        [body.username, body.password]
+    );
 
-    if (user) {
+    if (result.rows.length > 0) {
         return {
             message: 'Login successful'
         };
@@ -62,10 +77,11 @@ const server = http.createServer(async (req, res) => {
 
     try {
         if (req.method === 'GET' && req.url === '/users') {
-            const users = getUsers();
-            sendResponse(res, 200, users);
-            return;
-        }
+        const result = await pool.query('SELECT * FROM users');
+
+        sendResponse(res, 200, result.rows);
+        return;
+}
 
         if (req.method === 'POST' && req.url === '/register') {
             const result = await registerUser(req);

@@ -37,7 +37,8 @@ tabReg.onclick = () => {
     tabReg.classList.add('active');
 };
 
-// register
+
+// REGISTER
 formReg.onsubmit = async (e) => {
     e.preventDefault();
 
@@ -71,7 +72,8 @@ formReg.onsubmit = async (e) => {
     }
 };
 
-// login
+
+// LOGIN
 formLogin.onsubmit = async (e) => {
     e.preventDefault();
 
