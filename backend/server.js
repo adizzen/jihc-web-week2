@@ -38,23 +38,34 @@ async function registerUser(req) {
     };
 }
 
-async function loginUser(req) {
+async function updateUser(req) {
+    const id = req.url.split('/')[2];
+
     const body = await CoBody.json(req);
 
-    const result = await pool.query(
-        `SELECT * FROM users
-         WHERE email = $1 AND password = $2`,
-        [body.username, body.password]
+    await pool.query(
+        `UPDATE users
+         SET name = $1
+         WHERE id = $2`,
+        [body.name, id]
     );
 
-    if (result.rows.length > 0) {
-        return {
-            message: 'Login successful'
-        };
-    }
+    return {
+        message: 'User updated successfully'
+    };
+}
+
+async function deleteUser(req) {
+    const id = req.url.split('/')[2];
+
+    await pool.query(
+        `DELETE FROM users
+         WHERE id = $1`,
+        [id]
+    );
 
     return {
-        message: 'Wrong username or password'
+        message: 'User deleted successfully'
     };
 }
 
@@ -91,6 +102,18 @@ const server = http.createServer(async (req, res) => {
 
         if (req.method === 'POST' && req.url === '/login') {
             const result = await loginUser(req);
+            sendResponse(res, 200, result);
+            return;
+        }
+
+        if (req.method === 'PUT' && req.url.startsWith('/users/')) {
+            const result = await updateUser(req);
+            sendResponse(res, 200, result);
+            return;
+        }
+
+        if (req.method === 'DELETE' && req.url.startsWith('/users/')) {
+            const result = await deleteUser(req);
             sendResponse(res, 200, result);
             return;
         }
